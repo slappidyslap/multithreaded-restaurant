@@ -7,20 +7,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 // как терминал в пиццериях у кассы
 public class OrdersManager {
 
-    private static final OrdersManager INSTANCE = new OrdersManager();
-
-    public static final AtomicInteger count = new AtomicInteger(0);
     private final BlockingQueue<Order> queue;
+    private final AtomicInteger count;
 
-    private OrdersManager() {
+    public OrdersManager() {
         this.queue = new LinkedBlockingQueue<>();
+        this.count = new AtomicInteger(0);
     }
 
-    public static synchronized OrdersManager getInstance() {
-        return INSTANCE;
-    }
-
-    public void addOrder(Order order) {
+    public synchronized void addOrder(Order order) {
         if (queue.offer(order)) {
             order.setId(count.get());
             count.incrementAndGet();
@@ -37,6 +32,6 @@ public class OrdersManager {
     }
 
     public int getCount() {
-        return count.get();
+        return count.getAndIncrement();
     }
 }

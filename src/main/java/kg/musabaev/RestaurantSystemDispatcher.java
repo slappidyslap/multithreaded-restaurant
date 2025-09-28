@@ -8,17 +8,22 @@ import static java.lang.System.getProperty;
 
 public class RestaurantSystemDispatcher extends Thread {
 
-    private ExecutorService chefsPool;
-    private OrdersManager ordersManager;
+    private final ExecutorService chefPool;
+    private final OrdersManager ordersManager;
+    private final Restaurant restaurant;
 
-    public RestaurantSystemDispatcher() {
+    public RestaurantSystemDispatcher(Restaurant restaurant) {
         super("RestaurantSystemDispatcher");
-        chefsPool = Executors.newFixedThreadPool(parseInt(getProperty("WORKING_CHEFS")));
+        this.restaurant = restaurant;
+        this.ordersManager = restaurant.getOrdersManager();
+        chefPool = Executors.newFixedThreadPool(parseInt(getProperty("WORKING_CHEFS")));
     }
 
     @Override
     public void run() {
         Order orderToCook = ordersManager.take();
-//            chefsPool.submit();
+        Chef randomChef = restaurant.getRandomChef();
+        chefPool.submit(randomChef.createTask(orderToCook));
+        if (!chefPool.isShutdown()) chefPool.shutdown();
     }
 }

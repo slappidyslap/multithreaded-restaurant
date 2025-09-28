@@ -8,26 +8,13 @@ public class Order {
     private Client orderedClient;
     private Waiter assignedWaiter;
     private Chef assignedChef;
-    private boolean isReady;
+
+    private OrderStatus status;
+
     // cyclicbarrier офики пачкой несут
-
-    private Order() {
-    }
-
     public Order(Client orderedClient) {
         this.orderedClient = orderedClient;
-        this.isReady = false;
-    }
-
-    @Override
-    public String toString() {
-        return "Order{" +
-                "id=" + id +
-                ", orderedClient=" + orderedClient +
-                ", assignedWaiter=" + assignedWaiter +
-                ", assignedChef=" + assignedChef +
-                ", isReady=" + isReady +
-                '}';
+        this.status = OrderStatus.PENDING_WAITER_ASSIGNMENT;
     }
 
     public int getId() {
@@ -42,32 +29,43 @@ public class Order {
         return orderedClient;
     }
 
-    public void setOrderedClient(Client orderedClient) {
+    public synchronized void setOrderedClient(Client orderedClient) {
         this.orderedClient = orderedClient;
     }
 
-    public Waiter getAssignedWaiter() {
+    public synchronized Waiter getAssignedWaiter() {
         return assignedWaiter;
     }
 
-    public void setAssignedWaiter(Waiter assignedWaiter) {
+    public synchronized void setAssignedWaiter(Waiter assignedWaiter) {
         this.assignedWaiter = assignedWaiter;
     }
 
-    public Chef getAssignedChef() {
+    public synchronized Chef getAssignedChef() {
         return assignedChef;
     }
 
-    public void setAssignedChef(Chef assignedChef) {
+    public synchronized void setAssignedChef(Chef assignedChef) {
         this.assignedChef = assignedChef;
     }
 
-    public boolean isReady() {
-        return isReady;
+    public OrderStatus getStatus() {
+        return status;
     }
 
-    public void setReady(boolean ready) {
-        isReady = ready;
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "id=" + id +
+                ", orderedClient=" + orderedClient +
+                ", assignedWaiter=" + assignedWaiter +
+                ", assignedChef=" + assignedChef +
+                ", status=" + status +
+                '}';
     }
 
     @Override

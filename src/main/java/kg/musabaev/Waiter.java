@@ -10,6 +10,7 @@ public class Waiter extends Thread {
     private final Set<Order> orders;
     private final Set<Table> servingTables;
     private final Restaurant restaurant;
+    private final OrdersManager ordersManager;
 
     public Waiter(String name, Restaurant restaurant) {
         super("waiter-" + name);
@@ -17,6 +18,7 @@ public class Waiter extends Thread {
         this.orders = new HashSet<>();
         this.servingTables = new HashSet<>();
         this.restaurant = restaurant;
+        this.ordersManager = restaurant.getOrdersManager();
     }
 
     @Override
@@ -29,19 +31,26 @@ public class Waiter extends Thread {
 
             Order clientOrder;
             try {
+                foundTable.getWaiterLocker().lock();
+
                 foundTable.foodOrdered().await(); // 3. Ждем когда клиенты сделают заказ
-                clientOrder = foundTable.getClientFoodOrder();
+                clientOrder = foundTable.getClientOrder();
                 if (clientOrder == null)
                     throw new RuntimeException("order can not be null");
                 orders.add(clientOrder); // 4. Записываем себе в блокнот (список заказанных продуктов)
+                clientOrder.setAssignedWaiter(this);
+                clientOrder.setStatus(OrderStatus.WAITING_FOR_KITCHEN_QUEUE);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException("RunnerWithDelayAndRepeat interrupted", e);
+            } finally {
+                foundTable.getWaiterLocker().unlock();
             }
 
-            if (OrdersManager.getInstance() == null)
+            if (ordersManager == null)
                 throw new RuntimeException("orders manager must works");
-            OrdersManager.getInstance().addOrder(clientOrder); // 5. Идем к терминалу и делаем добавляем заказ в систему
+            ordersManager.addOrder(clientOrder); // 5. Идем к терминалу и делаем добавляем заказ в систему
+            clientOrder.setStatus(OrderStatus.QUEUED_FOR_COOKING);
 
             // 6. *Ждем* пока повар не приготовит заказ (TODO щяс бы замутить реактившину)
 

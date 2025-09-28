@@ -9,7 +9,8 @@ public class Table {
     private final int id;
     private Client occupiedClient;
     private Waiter servingWaiter;
-    private Order clientFoodOrder;
+    private Order clientOrder;
+
     private final ReentrantLock waiterLocker;
     private final Condition foodOrdered;
 
@@ -17,7 +18,7 @@ public class Table {
         this.id = id;
         this.occupiedClient = null;
         this.servingWaiter = null;
-        this.clientFoodOrder = null;
+        this.clientOrder = null;
         this.waiterLocker = new ReentrantLock();
         this.foodOrdered = waiterLocker.newCondition();
     }
@@ -28,7 +29,7 @@ public class Table {
             throw new RuntimeException("table must be busy to place order");
         if (order == null)
             throw new RuntimeException("order can not be null");
-        if (clientFoodOrder != null)
+        if (clientOrder != null)
             throw new RuntimeException("previous order must be completed");
         if (servingWaiter == null)
             throw new RuntimeException("why is no one serving " + id + "-table?");
@@ -36,7 +37,7 @@ public class Table {
         waiterLocker.lock();
 
         foodOrdered.signal();
-        clientFoodOrder = order;
+        clientOrder = order;
 
         waiterLocker.unlock();
     }
@@ -69,8 +70,12 @@ public class Table {
         return foodOrdered;
     }
 
-    public Order getClientFoodOrder() {
-        return clientFoodOrder;
+    public ReentrantLock getWaiterLocker() {
+        return waiterLocker;
+    }
+
+    public Order getClientOrder() {
+        return clientOrder;
     }
 
     public Client getOccupiedClient() {

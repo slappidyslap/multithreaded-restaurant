@@ -5,6 +5,7 @@ import kg.musabaev.util.RunnerWithDelayAndRepeat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -14,12 +15,15 @@ import static java.lang.System.getProperty;
 
 public class Restaurant {
 
-    private List<Waiter> waiters;
-    private List<Chef> chefs;
-    private List<Client> clients;
-    private final List<Table> tables;
+    private final OrdersManager ordersManager;
 
-    public Restaurant() {
+    private final List<Waiter> waiters;
+    private final List<Chef> chefs;
+    private final List<Client> clients;
+    private final List<Table> tables;
+    private Random random;
+    public Restaurant(OrdersManager ordersManager) {
+        this.ordersManager = ordersManager;
         clients = new ArrayList<>();
         waiters = IntStream
                 .rangeClosed(1, parseInt(getProperty("WORKING_WAITERS")))
@@ -62,6 +66,19 @@ public class Restaurant {
         return tables;
     }
 
+    public Table getRandomTable() {
+        if (random == null) random = new Random();
+        return tables.get(random.nextInt(tables.size()));
+    }
+
+    public Chef getRandomChef() {
+        if (random == null) random = new Random();
+        return chefs.get(random.nextInt(chefs.size()));
+    }
+
+    public OrdersManager getOrdersManager() {
+        return ordersManager;
+    }
 
     @Debug
     void test() {
