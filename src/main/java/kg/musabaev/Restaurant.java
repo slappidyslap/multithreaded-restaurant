@@ -16,14 +16,16 @@ import static java.lang.System.getProperty;
 public class Restaurant {
 
     private final OrdersManager ordersManager;
-
+    private final RestaurantSystemDispatcher dispatcher;
     private final List<Waiter> waiters;
     private final List<Chef> chefs;
     private final List<Client> clients;
     private final List<Table> tables;
     private Random random;
-    public Restaurant(OrdersManager ordersManager) {
-        this.ordersManager = ordersManager;
+
+    public Restaurant() {
+        ordersManager = new OrdersManager(this);
+        dispatcher = new RestaurantSystemDispatcher(this);
         clients = new ArrayList<>();
         waiters = IntStream
                 .rangeClosed(1, parseInt(getProperty("WORKING_WAITERS")))
@@ -47,8 +49,7 @@ public class Restaurant {
                 .collect(Collectors.toCollection(CopyOnWriteArrayList::new));
     }
 
-    @Debug
-    void open() {
+    public void open() {
         RunnerWithDelayAndRepeat
                 .withRandomDelayInMillis(2000)
                 .times(5)
@@ -58,8 +59,17 @@ public class Restaurant {
                 });
     }
 
-    void waitersStartWork() {
+    public void waitersStartWork() {
         waiters.forEach(Thread::start);
+    }
+
+    public void startDispatcher() {
+        dispatcher.start();
+//        dispatcher.join();
+    }
+
+    public void close() {
+
     }
 
     public List<Table> getTables() {
@@ -78,10 +88,5 @@ public class Restaurant {
 
     public OrdersManager getOrdersManager() {
         return ordersManager;
-    }
-
-    @Debug
-    void test() {
-        System.out.println("ыы");
     }
 }

@@ -10,11 +10,13 @@ import static kg.musabaev.util.Utils.requireOrderStatus;
 // как терминал в пиццериях у кассы
 public class OrdersManager {
 
+    private final Restaurant restaurant;
     private final BlockingQueue<Order> incomingOrderQueue;
     private final BlockingQueue<Order> readyOrderQueue;
     private final AtomicInteger orderCount;
 
-    public OrdersManager() {
+    public OrdersManager(Restaurant restaurant) {
+        this.restaurant = restaurant;
         this.incomingOrderQueue = new LinkedBlockingQueue<>();
         this.readyOrderQueue = new LinkedBlockingQueue<>();
         this.orderCount = new AtomicInteger(0);
