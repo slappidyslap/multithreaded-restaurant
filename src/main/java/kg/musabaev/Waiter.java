@@ -1,8 +1,12 @@
 package kg.musabaev;
 
+import kg.musabaev.util.Utils;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+
+import static kg.musabaev.util.Utils.requireOrderStatus;
 
 public class Waiter extends Thread {
 
@@ -23,37 +27,26 @@ public class Waiter extends Thread {
 
     @Override
     public void run() {
-        while (true) {
+        while (true) { // FIXME цикл работает пока ресторан открыт
             Table foundTable = findTableAndClaimClient(); // 1. Ищем новых клиентов
-            if (foundTable == null) continue;
 
-            servingTables.add(foundTable); // 2. Если стол найден, то добавляем в блокнот (список обслуживаемых столиков)
+            if (foundTable == null) continue; // FIXME поочередно искать стол и проверять ordersmanager
 
-            Order clientOrder;
-            try {
-                foundTable.getWaiterLocker().lock();
+            // 2. Ждем когда клиенты сделают заказ
+            Order clientOrder = waitForClientPlaceOrder(foundTable);
 
-                foundTable.foodOrdered().await(); // 3. Ждем когда клиенты сделают заказ
-                clientOrder = foundTable.getClientOrder();
-                if (clientOrder == null)
-                    throw new RuntimeException("order can not be null");
-                orders.add(clientOrder); // 4. Записываем себе в блокнот (список заказанных продуктов)
-                clientOrder.setAssignedWaiter(this);
-                clientOrder.setStatus(OrderStatus.WAITING_FOR_KITCHEN_QUEUE);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("RunnerWithDelayAndRepeat interrupted", e);
-            } finally {
-                foundTable.getWaiterLocker().unlock();
-            }
+            // 3. Идем к терминалу и делаем добавляем заказ в систему
+            acceptOrderAndAddToQueue(clientOrder);
 
-            if (ordersManager == null)
-                throw new RuntimeException("orders manager must works");
-            ordersManager.addOrder(clientOrder); // 5. Идем к терминалу и делаем добавляем заказ в систему
-            clientOrder.setStatus(OrderStatus.QUEUED_FOR_COOKING);
+            // ----------------
 
-            // 6. *Ждем* пока повар не приготовит заказ (TODO щяс бы замутить реактившину)
+            Order orderFromManager = checkPreparedOrders();
 
+            boolean isMyOrder = checkIsMyOrder(orderFromManager);
+
+            if (!isMyOrder) continue;
+
+            deliverPreparedOrder(orderFromManager);
 
         }
 
@@ -63,14 +56,63 @@ public class Waiter extends Thread {
         for (Table table : restaurant.getTables()) {
             if (table.getOccupiedClient() == null) {
                 table.setServingWaiter(this);
+                // Если стол найден, то добавляем в блокнот (список обслуживаемых столиков)
+                servingTables.add(table);
                 return table;
             }
         }
         return null;
     }
 
+    private Order waitForClientPlaceOrder(Table foundTable) {
+        try {
+            foundTable.getWaiterLocker().lock();
+
+            foundTable.foodOrdered().await();
+            Order clientOrder = foundTable.getClientOrder();
+            if (clientOrder == null)
+                throw new RuntimeException("order can not be null");
+            // Записываем себе в блокнот (список заказов)
+            orders.add(clientOrder);
+            clientOrder.setAssignedWaiter(this);
+            clientOrder.setStatus(OrderStatus.WAITING_FOR_KITCHEN_QUEUE);
+
+            return clientOrder;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("RunnerWithDelayAndRepeat interrupted", e);
+        } finally {
+            foundTable.getWaiterLocker().unlock();
+        }
+    }
+
+    private void acceptOrderAndAddToQueue(Order clientOrder) {
+        if (ordersManager == null)
+            throw new RuntimeException("orders manager must works");
+        ordersManager.addOrderToIncomingQueue(clientOrder);
+    }
+
+    private Order checkPreparedOrders() {
+        return ordersManager.pollReadyOrderForWaiter(this);
+    }
+
+    private boolean checkIsMyOrder(Order orderFromManager) {
+        if (orderFromManager == null) return false;
+        orderFromManager.setStatus(OrderStatus.OUT_FOR_DELIVERY);
+        return true;
+    }
+
+    private void deliverPreparedOrder(Order orderFromManager) {
+        requireOrderStatus(orderFromManager, OrderStatus.OUT_FOR_DELIVERY);
+        // TODO
+    }
+
     public String getFirstName() {
         return firstName;
+    }
+
+    public Set<Order> getOrders() {
+        return orders;
     }
 
     @Override

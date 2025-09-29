@@ -36,7 +36,7 @@ public class Restaurant {
         chefs = IntStream
                 .rangeClosed(1, parseInt(getProperty("WORKING_CHEFS")))
                 .mapToObj(Integer::toString)
-                .map(Chef::new)
+                .map(i -> new Chef(i, this))
                 .collect(Collectors.collectingAndThen(
                         Collectors.toList(),
                         Collections::unmodifiableList

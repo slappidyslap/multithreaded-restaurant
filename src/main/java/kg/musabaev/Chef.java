@@ -5,9 +5,13 @@ import java.util.Random;
 public class Chef {
 
     private final String name;
+    private final Restaurant restaurant;
+    private final OrdersManager ordersManager;
 
-    public Chef(String name) {
+    public Chef(String name, Restaurant restaurant) {
         this.name = name;
+        this.restaurant = restaurant;
+        this.ordersManager = restaurant.getOrdersManager();
     }
 
     public Task createTask(Order order) {
@@ -31,7 +35,8 @@ public class Chef {
 
             sleepChef();
 
-            order.setStatus(OrderStatus.READY_FOR_PICKUP);
+            order.setStatus(OrderStatus.PREPARED);
+            ordersManager.addOrderToReadyQueue(order);
         }
 
         private void sleepChef() {

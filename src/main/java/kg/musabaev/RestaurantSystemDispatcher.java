@@ -21,7 +21,7 @@ public class RestaurantSystemDispatcher extends Thread {
 
     @Override
     public void run() {
-        Order orderToCook = ordersManager.take();
+        Order orderToCook = ordersManager.takeOrderFromIncomingQueue();
         Chef randomChef = restaurant.getRandomChef();
         chefPool.submit(randomChef.createTask(orderToCook));
         if (!chefPool.isShutdown()) chefPool.shutdown();
