@@ -13,9 +13,9 @@ public class Table {
     private Client occupiedClient;
     private Waiter servingWaiter;
     private Order clientOrder;
-    private final ReentrantLock waiterLocker;
-    private final Condition foodOrdered;
-    private final ReentrantLock tableLocker;
+    private final ReentrantLock locker;
+    private final Condition clientOrdered;
+    private final Condition orderDelivered;
 
 
     public Table(int id) {
@@ -23,20 +23,20 @@ public class Table {
         this.occupiedClient = null;
         this.servingWaiter = null;
         this.clientOrder = null;
-        this.waiterLocker = new ReentrantLock();
-        this.foodOrdered = waiterLocker.newCondition();
-        this.tableLocker = new ReentrantLock();
+        this.locker = new ReentrantLock();
+        this.clientOrdered = locker.newCondition();
+        this.orderDelivered = locker.newCondition();
     }
 
     public boolean tryAssign(Waiter servingWaiter) {
-        tableLocker.lock();
+        locker.lock();
 
         if (this.occupiedClient != null && servingWaiter != null) {
             this.servingWaiter = servingWaiter;
-            tableLocker.unlock();
+            locker.unlock();
             return true;
         }
-        tableLocker.unlock();
+        locker.unlock();
         return false;
     }
 
@@ -47,12 +47,10 @@ public class Table {
         requireNonNull(this.servingWaiter, "why is no one serving " + id + "-table?");
         requireBeNull(this.clientOrder, "previous order must be completed");
 
-        waiterLocker.lock();
-
+        locker.lock();
         this.clientOrder = order;
-        foodOrdered.signal();
-
-        waiterLocker.unlock();
+        clientOrdered.signal();
+        locker.unlock();
     }
 
     @Override
@@ -80,12 +78,16 @@ public class Table {
         return id;
     }
 
-    public Condition foodOrdered() {
-        return foodOrdered;
+    public Condition clientOrdered() {
+        return clientOrdered;
     }
 
-    public ReentrantLock getWaiterLocker() {
-        return waiterLocker;
+    public Condition orderDelivered() {
+        return orderDelivered;
+    }
+
+    public ReentrantLock getLocker() {
+        return locker;
     }
 
     public Order getClientOrder() {

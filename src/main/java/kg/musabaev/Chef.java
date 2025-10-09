@@ -50,6 +50,7 @@ public class Chef {
             logger.info(currentThreadName() + " cooked " + order.getId() + "-order and added to ready order queue");
         }
 
+        // simulate cooking
         private void cookOrder(Order _) {
             try {
                 if (random == null) random = new Random(System.currentTimeMillis());

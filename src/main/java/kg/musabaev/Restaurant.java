@@ -60,6 +60,7 @@ public class Restaurant {
                 .run(() -> {
                     Client newClient = Client.chooseTable(this);
                     newClient.orderFood();
+                    newClient.awaitDeliveredOrder();
                 });
     }
 

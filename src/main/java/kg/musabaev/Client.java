@@ -50,4 +50,16 @@ public class Client {
     public Table getOccupiedTable() {
         return occupiedTable;
     }
+
+    public void awaitDeliveredOrder() {
+        occupiedTable.getLocker().lock();
+        try {
+            occupiedTable.orderDelivered().await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(currentThread() + "interrupted", e);
+        } finally {
+            occupiedTable.getLocker().unlock();
+        }
+    }
 }

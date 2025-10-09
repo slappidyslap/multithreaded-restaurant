@@ -64,23 +64,31 @@ public class OrdersManager {
         }
     }
 
+    /**
+     * Извлекает и удаляет из очереди следующий готовый {@link Order}, если он принадлежит
+     * указанному {@link Waiter}.
+     * <br>
+     * Если заказ в начале очереди отсутствует ({@code null}) или принадлежит другому официанту,
+     * метод возвращает {@code null}.
+     * В противном случае заказ извлекается из очереди и возвращается вызывающему потоку.
+     *
+     * @param waiter официант, пытающийся получить свой готовый заказ; не должен быть {@code null}
+     * @return готовый {@link Order}, принадлежащий указанному официанту,
+     *         или {@code null}, если очередь пуста,
+     *         либо следующий заказ в ней предназначен другому официанту
+     * @throws IllegalStateException если статус заказа не соответствует {@link OrderStatus#PREPARED}
+     * @throws IllegalStateException если извлечённый и просмотренный заказы не совпадают (нарушение целостности очереди)
+     */
     public synchronized Order pollReadyOrderForWaiter(Waiter waiter) {
         Order peekedOrder = readyOrderQueue.peek();
+        if (peekedOrder == null) return null;
+        else if (!peekedOrder.getAssignedWaiter().equals(waiter)) return null;
+        else if (!waiter.getOrders().contains(peekedOrder)) return null;
 
-        requireNonNull(peekedOrder);
         requireOrderStatus(peekedOrder, OrderStatus.PREPARED);
-        requireOrderContainsInWaiter(peekedOrder, waiter);
 
-        if (!peekedOrder.getAssignedWaiter().equals(waiter)) return null;
-        return readyOrderQueue.poll();
-    }
-
-    public synchronized Order peekOrderFromReadyQueue() {
-        return readyOrderQueue.peek();
-    }
-
-    private void requireOrderContainsInWaiter(Order order, Waiter waiter) {
-        if (waiter.getOrders().contains(order)) return;
-        throw new IllegalStateException("order " + order + "must contains in waiter " + waiter + "'s notepad ");
+        Order polledOrder = readyOrderQueue.poll();
+        if(polledOrder != peekedOrder) throw new IllegalStateException("taken and peeked order from queue must be same");
+        return polledOrder;
     }
 }

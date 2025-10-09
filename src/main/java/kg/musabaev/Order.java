@@ -30,12 +30,16 @@ public class Order {
         return orderedClient;
     }
 
+    public Table getClientOccupiedTable() {
+        return clientOccupiedTable;
+    }
+
     public int getOrderedClientId() {
         return orderedClient.getId();
     }
 
     public int getClientOccupiedTableId() {
-        return orderedClient.getOccupiedTable().getId();
+        return clientOccupiedTable.getId();
     }
 
     public synchronized Waiter getAssignedWaiter() {
