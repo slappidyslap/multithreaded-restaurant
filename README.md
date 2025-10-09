@@ -1,25 +1,30 @@
-Semaphore - клиент на стол
+Проект "Ресторан"
 
-CyclicBarrier - офики пачкой несут еду
+Основные сущности и потоки
 
-CountDownLatch
+* Клиенты (Client)
 
-aop proxy invocationhandler by annonatino
+  * Представлены объектами-задачами (Runnable)
 
-awaitility
+  * ~~Ждут свободного столика (Semaphore)~~
 
-mb custom queue
+  * Заказывают еду, ждут обслуживания и уходят
 
-Waiter - изолированный тред - System.setProperty("WORKING_WAITERS", "5");
+  * ~~Запускаются в пуле потоков (ExecutorService)~~
 
-Chef - задача (задача готовить), которая отправляется в пул потоков System.setProperty("WORKING_CHEFS", "4");
+* Официанты (Waiter)
 
-Клиен - задача (задача есть)
+  * Каждый — отдельный поток (Thread)
 
+  * Берут заказы у клиентов из очереди
 
+  * Передают заказ поварам и приносят готовое блюдо клиенту
 
+* Повара (Chef)
 
+  * Логика приготовления реализована как задачи (Runnable - ChefTask)
 
----
+  * Выполняются через пул потоков поваров (ExecutorService)
 
-synchronized
+Код не готов
+Описание не готово
