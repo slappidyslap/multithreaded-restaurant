@@ -1,17 +1,25 @@
 package kg.musabaev;
 
 import java.util.Random;
+import java.util.logging.Logger;
+
+import static kg.musabaev.util.Utils.currentThreadName;
 
 public class Chef {
 
     private final String name;
     private final Restaurant restaurant;
     private final OrdersManager ordersManager;
+    private final Logger logger = Logger.getLogger(Chef.class.getName());
 
     public Chef(String name, Restaurant restaurant) {
         this.name = name;
         this.restaurant = restaurant;
         this.ordersManager = restaurant.getOrdersManager();
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Task createTask(Order order) {
@@ -30,16 +38,19 @@ public class Chef {
 
         @Override
         public void run() {
-            Thread.currentThread().setName(name + "-chef start order-" + order.getId());
+            Thread.currentThread().setName(name + "-chef");
+
+            logger.info(currentThreadName() + " started to cook " + order.getId() + "-order");
+
             order.setStatus(OrderStatus.IN_PREPARATION);
-
-            sleepChef();
-
+            cookOrder(order);
             order.setStatus(OrderStatus.PREPARED);
             ordersManager.addOrderToReadyQueue(order);
+
+            logger.info(currentThreadName() + " cooked " + order.getId() + "-order and added to ready order queue");
         }
 
-        private void sleepChef() {
+        private void cookOrder(Order _) {
             try {
                 if (random == null) random = new Random(System.currentTimeMillis());
                 int max = 15000;
@@ -48,7 +59,7 @@ public class Chef {
                 Thread.sleep(randomDelay);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("Chef interrupted", e);
+                throw new RuntimeException(Thread.currentThread().getName() + "interrupted", e);
             }
         }
     }

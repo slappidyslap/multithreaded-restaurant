@@ -34,7 +34,7 @@ public class RunnerWithDelayAndRepeat {
                 Thread.sleep(randomDelay);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("RunnerWithDelayAndRepeat interrupted", e);
+                throw new RuntimeException(Thread.currentThread().getName() + "interrupted", e);
             }
             runnable.run();
         }

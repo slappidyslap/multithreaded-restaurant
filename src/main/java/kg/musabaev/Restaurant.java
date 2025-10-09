@@ -2,11 +2,12 @@ package kg.musabaev;
 
 import kg.musabaev.util.RunnerWithDelayAndRepeat;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -17,16 +18,19 @@ public class Restaurant {
 
     private final OrdersManager ordersManager;
     private final RestaurantSystemDispatcher dispatcher;
+    private final Semaphore tableSemaphore;
+
     private final List<Waiter> waiters;
     private final List<Chef> chefs;
-    private final List<Client> clients;
+    private final AtomicInteger clientCount;
     private final List<Table> tables;
     private Random random;
 
     public Restaurant() {
         ordersManager = new OrdersManager(this);
         dispatcher = new RestaurantSystemDispatcher(this);
-        clients = new ArrayList<>();
+        tableSemaphore = new Semaphore(parseInt(getProperty("AVAILABLE_TABLES")));
+        clientCount = new AtomicInteger(0);
         waiters = IntStream
                 .rangeClosed(1, parseInt(getProperty("WORKING_WAITERS")))
                 .mapToObj(Integer::toString)
@@ -88,5 +92,14 @@ public class Restaurant {
 
     public OrdersManager getOrdersManager() {
         return ordersManager;
+    }
+
+    public AtomicInteger clientCount() {
+        return clientCount;
+    }
+
+    public boolean isOpen() {
+        // TODO
+        return true;
     }
 }

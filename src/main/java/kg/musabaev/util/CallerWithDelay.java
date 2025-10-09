@@ -25,7 +25,7 @@ public class CallerWithDelay {
             Thread.sleep(randomDelay);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("CallerWithDelay interrupted during delay", e);
+            throw new RuntimeException(Thread.currentThread().getName() + "interrupted", e);
         }
         try {
             return callable.call();

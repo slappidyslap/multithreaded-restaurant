@@ -11,4 +11,12 @@ public class Utils {
                 "expected order status: " + expected + ", but was: " + order.getStatus()
         );
     }
+
+    public static void requireBeNull(Object obj, String message) {
+        if (obj != null) throw new RuntimeException(message);
+    }
+
+    public static String currentThreadName() {
+        return Thread.currentThread().getName();
+    }
 }

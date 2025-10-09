@@ -5,15 +5,16 @@ import java.util.Objects;
 public class Order {
 
     private int id;
-    private Client orderedClient;
+    private final Client orderedClient;
+    private final Table clientOccupiedTable;
     private Waiter assignedWaiter;
     private Chef assignedChef;
-
     private OrderStatus status;
+    // TODO cyclicbarrier офики пачкой несут
 
-    // cyclicbarrier офики пачкой несут
     public Order(Client orderedClient) {
         this.orderedClient = orderedClient;
+        this.clientOccupiedTable = orderedClient.getOccupiedTable();
         this.status = OrderStatus.PENDING_WAITER_ASSIGNMENT;
     }
 
@@ -29,8 +30,12 @@ public class Order {
         return orderedClient;
     }
 
-    public synchronized void setOrderedClient(Client orderedClient) {
-        this.orderedClient = orderedClient;
+    public int getOrderedClientId() {
+        return orderedClient.getId();
+    }
+
+    public int getClientOccupiedTableId() {
+        return orderedClient.getOccupiedTable().getId();
     }
 
     public synchronized Waiter getAssignedWaiter() {

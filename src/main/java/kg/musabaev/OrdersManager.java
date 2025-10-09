@@ -22,6 +22,7 @@ public class OrdersManager {
         this.orderCount = new AtomicInteger(0);
     }
 
+    // FIXME тут надо synchronized?
     public synchronized void addOrderToIncomingQueue(Order order) {
         requireOrderStatus(order, OrderStatus.WAITING_FOR_KITCHEN_QUEUE);
         requireNonNull(order.getOrderedClient(), "adding order to incoming queue requires non null client");
@@ -29,8 +30,7 @@ public class OrdersManager {
 
         try {
             incomingOrderQueue.add(order);
-            order.setId(orderCount.get());
-            orderCount.incrementAndGet();
+            order.setId(orderCount.getAndIncrement());
             order.setStatus(OrderStatus.QUEUED_FOR_COOKING);
         } catch (Exception e) {
             throw new RuntimeException("could not add order to incoming queue", e);
@@ -46,7 +46,7 @@ public class OrdersManager {
             return order;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("OrdersManager interrupted", e);
+            throw new RuntimeException(Thread.currentThread().getName() + "interrupted", e);
         }
     }
 

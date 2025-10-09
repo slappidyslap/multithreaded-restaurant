@@ -4,15 +4,19 @@ import java.util.Objects;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static java.util.Objects.requireNonNull;
+import static kg.musabaev.util.Utils.requireBeNull;
+
 public class Table {
 
     private final int id;
     private Client occupiedClient;
     private Waiter servingWaiter;
     private Order clientOrder;
-
     private final ReentrantLock waiterLocker;
     private final Condition foodOrdered;
+    private final ReentrantLock tableLocker;
+
 
     public Table(int id) {
         this.id = id;
@@ -21,26 +25,36 @@ public class Table {
         this.clientOrder = null;
         this.waiterLocker = new ReentrantLock();
         this.foodOrdered = waiterLocker.newCondition();
+        this.tableLocker = new ReentrantLock();
+    }
+
+    public boolean tryAssign(Waiter servingWaiter) {
+        tableLocker.lock();
+
+        if (this.occupiedClient != null && servingWaiter != null) {
+            this.servingWaiter = servingWaiter;
+            tableLocker.unlock();
+            return true;
+        }
+        tableLocker.unlock();
+        return false;
     }
 
     // офик должен к этому момент "представиться" с клиентами и обслуживать
-    public void callWaiter(Order order) {
-        if (occupiedClient == null)
-            throw new RuntimeException("table must be busy to place order");
-        if (order == null)
-            throw new RuntimeException("order can not be null");
-        if (clientOrder != null)
-            throw new RuntimeException("previous order must be completed");
-        if (servingWaiter == null)
-            throw new RuntimeException("why is no one serving " + id + "-table?");
+    public void signalOrderPlaced(Order order) {
+        requireNonNull(this.occupiedClient, "table must be busy to place order");
+        requireNonNull(order, "order can not be null");
+        requireNonNull(this.servingWaiter, "why is no one serving " + id + "-table?");
+        requireBeNull(this.clientOrder, "previous order must be completed");
 
         waiterLocker.lock();
 
+        this.clientOrder = order;
         foodOrdered.signal();
-        clientOrder = order;
 
         waiterLocker.unlock();
     }
+
     @Override
     public String toString() {
         return "Table{" +
@@ -84,6 +98,10 @@ public class Table {
 
     public void setOccupiedClient(Client occupiedClient) {
         this.occupiedClient = occupiedClient;
+    }
+
+    public int getOccupiedClientId() {
+        return this.occupiedClient.getId();
     }
 
     public Waiter getServingWaiter() {
