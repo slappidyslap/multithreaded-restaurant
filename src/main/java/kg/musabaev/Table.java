@@ -1,6 +1,7 @@
 package kg.musabaev;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -16,7 +17,7 @@ public class Table {
     private final ReentrantLock locker;
     private final Condition clientOrdered;
     private final Condition orderDelivered;
-
+    private final AtomicBoolean isClientFinishedEating;
 
     public Table(int id) {
         this.id = id;
@@ -26,6 +27,7 @@ public class Table {
         this.locker = new ReentrantLock();
         this.clientOrdered = locker.newCondition();
         this.orderDelivered = locker.newCondition();
+        this.isClientFinishedEating = new AtomicBoolean(false);
     }
 
     public boolean tryAssign(Waiter servingWaiter) {
@@ -86,12 +88,20 @@ public class Table {
         return orderDelivered;
     }
 
+    public AtomicBoolean isClientFinishedEating() {
+        return isClientFinishedEating;
+    }
+
     public ReentrantLock getLocker() {
         return locker;
     }
 
     public Order getClientOrder() {
         return clientOrder;
+    }
+
+    public void setClientOrder(Order clientOrder) {
+        this.clientOrder = clientOrder;
     }
 
     public Client getOccupiedClient() {
@@ -104,6 +114,10 @@ public class Table {
 
     public int getOccupiedClientId() {
         return this.occupiedClient.getId();
+    }
+
+    public int getClientOrderId() {
+        return this.clientOrder.getId();
     }
 
     public Waiter getServingWaiter() {

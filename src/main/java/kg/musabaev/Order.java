@@ -5,7 +5,7 @@ import java.util.Objects;
 public class Order {
 
     private int id;
-    private final Client orderedClient;
+    private Client orderedClient;
     private final Table clientOccupiedTable;
     private Waiter assignedWaiter;
     private Chef assignedChef;
@@ -28,6 +28,10 @@ public class Order {
 
     public Client getOrderedClient() {
         return orderedClient;
+    }
+
+    public void setOrderedClient(Client orderedClient) {
+        this.orderedClient = orderedClient;
     }
 
     public Table getClientOccupiedTable() {

@@ -61,6 +61,9 @@ public class Restaurant {
                     Client newClient = Client.chooseTable(this);
                     newClient.orderFood();
                     newClient.awaitDeliveredOrder();
+                    newClient.startEating();
+                    newClient.payForOrder();
+                    newClient.leaveRestaurant();
                 });
     }
 

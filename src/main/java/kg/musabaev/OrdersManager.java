@@ -85,6 +85,8 @@ public class OrdersManager {
         else if (!peekedOrder.getAssignedWaiter().equals(waiter)) return null;
         else if (!waiter.getOrders().contains(peekedOrder)) return null;
 
+
+
         requireOrderStatus(peekedOrder, OrderStatus.PREPARED);
 
         Order polledOrder = readyOrderQueue.poll();

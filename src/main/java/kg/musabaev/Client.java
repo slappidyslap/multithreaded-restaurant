@@ -1,19 +1,29 @@
 package kg.musabaev;
 
 import kg.musabaev.util.CallerWithDelay;
+import kg.musabaev.util.Utils;
 
+import java.util.Random;
 import java.util.logging.Logger;
 
 import static java.lang.Thread.currentThread;
 import static java.util.Objects.requireNonNull;
+import static kg.musabaev.util.Utils.currentThreadName;
 
 public class Client {
 
-    private int id;
-    private Table occupiedTable;
-    private Restaurant visitedRestaurant;
+    private final int id;
+    private final Table occupiedTable;
+    private final Restaurant visitedRestaurant;
+    private Random random;
+    private final Logger logger;
 
-    private final Logger logger = Logger.getLogger(Client.class.getName());
+    public Client(int id, Restaurant visitedRestaurant, Table occupiedTable) {
+        this.id = id;
+        this.visitedRestaurant = visitedRestaurant;
+        this.occupiedTable = occupiedTable;
+        this.logger = Logger.getLogger(Client.class.getName());
+    }
 
     public static synchronized Client chooseTable(Restaurant visitedRestaurant) {
         Table choseTable = visitedRestaurant.getRandomTable();
@@ -26,7 +36,7 @@ public class Client {
     }
 
     public void orderFood() {
-        logger.info(currentThread().getName() + " is choosing food");
+        logger.info(currentThreadName() + " is choosing food");
 
         requireNonNull(this.occupiedTable, "client must occupy table");
 
@@ -35,20 +45,7 @@ public class Client {
                 .call(() -> new Order(this));
         this.occupiedTable.signalOrderPlaced(newOrder);
 
-        logger.info(currentThread().getName() + " placed order in " + occupiedTable.getId() + "-table");
-    }
-
-    public Client(int id, Restaurant visitedRestaurant, Table occupiedTable) {
-        this.visitedRestaurant = visitedRestaurant;
-        this.occupiedTable = occupiedTable;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public Table getOccupiedTable() {
-        return occupiedTable;
+        logger.info(currentThreadName() + " placed order in " + occupiedTable.getId() + "-table");
     }
 
     public void awaitDeliveredOrder() {
@@ -61,5 +58,30 @@ public class Client {
         } finally {
             occupiedTable.getLocker().unlock();
         }
+    }
+
+    public void startEating() {
+        logger.info(currentThreadName() + " starts eating " + occupiedTable.getClientOrderId() + "-order");
+        Utils.simulateDelay(random, 20_000, 40_000);
+        occupiedTable.isClientFinishedEating().set(true);
+        logger.info(currentThreadName() + " finished eating " + occupiedTable.getClientOrderId() + "-order");
+    }
+
+    public void payForOrder() {
+        logger.info(currentThreadName() + " paid for " + occupiedTable.getClientOrderId() + "-order");
+    }
+
+    public void leaveRestaurant() {
+        logger.info(currentThreadName() + "leaves our restaurant");
+        occupiedTable.setOccupiedClient(null);
+        occupiedTable.getClientOrder().setOrderedClient(null);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public Table getOccupiedTable() {
+        return occupiedTable;
     }
 }

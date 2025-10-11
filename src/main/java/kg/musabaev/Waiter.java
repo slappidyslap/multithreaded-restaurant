@@ -1,15 +1,14 @@
 package kg.musabaev;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
+import kg.musabaev.util.Utils;
+
+import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
-import static kg.musabaev.util.Utils.currentThreadName;
-import static kg.musabaev.util.Utils.requireOrderStatus;
+import static kg.musabaev.util.Utils.*;
 
 public class Waiter extends Thread {
 
@@ -40,7 +39,7 @@ public class Waiter extends Thread {
                 case FIND_CLIENT: {
                     Table foundTable = findAndAssignTable(); // 1. Ищем новых клиентов
                     if (foundTable == null) {
-                        action = WaiterAction.HANDLE_ORDER;
+                        action = action.next();
                         break;
                     }
                     // 2. Ждем когда клиенты сделают заказ
@@ -49,21 +48,78 @@ public class Waiter extends Thread {
                     addOrderToQueue(clientOrder);
                     break;
                 }
-                case HANDLE_ORDER: {
+                case HANDLE_PREPARED_ORDER: {
                     Order orderFromManager = checkPreparedOrders();
 
                     boolean isMyOrder = isMyOrder(orderFromManager);
 
                     if (!isMyOrder) {
-                        action = WaiterAction.FIND_CLIENT;
+                        action = action.next();
                         break;
-                    };
+                    }
 
                     deliverPreparedOrder(orderFromManager);
+                    break;
+                } case HANDLE_CHECKOUT: {
+                    List<Table> tablesWhereClientsFinishedEating = checkClientsFinishedEating();
+
+                    if (tablesWhereClientsFinishedEating.isEmpty()) {
+                        action = action.next();
+                        break;
+                    }
+
+                    handleCheckouts(tablesWhereClientsFinishedEating);
                     break;
                 }
             }
         }
+    }
+
+    private List<Table> checkClientsFinishedEating() {
+        logger.info(currentThreadName() + " is checking tables where clients finished eating");
+
+        if (servingTables.isEmpty()) {
+            logger.info(currentThreadName() + " hasn't any table to handle checkout");
+            return Collections.emptyList();
+        }
+        List<Table> tablesWhereClientsFinishedEating = new ArrayList<>();
+        for (Table table : servingTables) {
+            requireOrderStatus(table.getClientOrder(), OrderStatus.DELIVERED);
+
+            boolean isClientFinishedEating = table.isClientFinishedEating().get();
+            if (isClientFinishedEating) {
+                tablesWhereClientsFinishedEating.add(table);
+            }
+        }
+        logger.info(format("%s found %s tables where clients finished eating. tables ids: %s",
+                currentThreadName(),
+                tablesWhereClientsFinishedEating.size(),
+                tablesWhereClientsFinishedEating.stream().map(Table::getId).collect(Collectors.toList())));
+        return tablesWhereClientsFinishedEating;
+    }
+
+    private void handleCheckouts(List<Table> tables) {
+        logger.info(format("%s starts handling checkout for tables: %s",
+                currentThreadName(),
+                tables.stream().map(Table::getId).collect(Collectors.toList())
+                ));
+        for (Table table : tables) {
+            table.getClientOrder().setStatus(OrderStatus.COMPLETED);
+            logger.info(format("%s checkout money by %d-client occupied %d-table",
+                    currentThreadName(),
+                    table.getOccupiedClientId(),
+                    table.getId()));
+            cleanTable(table);
+        }
+        tables.forEach(t -> t.getClientOrder().setStatus(OrderStatus.COMPLETED));
+    }
+
+    private void cleanTable(Table table) {
+        table.setOccupiedClient(null);
+        this.servingTables.remove(table);
+        table.setServingWaiter(null);
+        this.orders.remove(table.getClientOrder());
+        table.setClientOrder(null);
     }
 
     private Table findAndAssignTable() {
@@ -82,10 +138,12 @@ public class Waiter extends Thread {
     }
 
     private Order awaitClientOrder(Table foundTable) {
+        requireEqualRefs(foundTable.getOccupiedClient(), foundTable.getClientOrder().getOrderedClient());
+
         try {
             foundTable.getLocker().lock();
 
-            logger.info(format("%s waiting for %s-client's order occupying %s-table",
+            logger.info(format("%s is waiting for %s-client's order occupying %s-table",
                     currentThreadName(),
                     foundTable.getOccupiedClientId(),
                     foundTable.getId()));
@@ -126,8 +184,7 @@ public class Waiter extends Thread {
 
     private Order checkPreparedOrders() {
         logger.info(currentThreadName() + " is checking orders manager for prepared order");
-        Order order = ordersManager.pollReadyOrderForWaiter(this);
-        return order;
+        return ordersManager.pollReadyOrderForWaiter(this);
     }
 
     private boolean isMyOrder(Order order) {
@@ -166,16 +223,7 @@ public class Waiter extends Thread {
 
     // simulate delivering
     private void deliverOrder() {
-        try {
-            if (random == null) random = new Random(System.currentTimeMillis());
-            int max = 15000;
-            int min = 10000;
-            int randomDelay = random.nextInt(max - min + 1) + min;
-            Thread.sleep(randomDelay);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(Thread.currentThread().getName() + "interrupted", e);
-        }
+        Utils.simulateDelay(random, 2000, 4000);
     }
 
     public String getFirstName() {

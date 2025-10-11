@@ -51,7 +51,7 @@ public class Chef {
         }
 
         // simulate cooking
-        private void cookOrder(Order _) {
+        private void cookOrder(Order unusedOrder) {
             try {
                 if (random == null) random = new Random(System.currentTimeMillis());
                 int max = 15000;
