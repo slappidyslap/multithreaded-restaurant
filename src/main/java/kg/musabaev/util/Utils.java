@@ -26,7 +26,7 @@ public class Utils {
         return Thread.currentThread().getName();
     }
 
-    public static void simulateDelay(Random random, int from, int to) {
+    public static void delay(Random random, int from, int to) {
         try {
             if (random == null) random = new Random(System.currentTimeMillis());
             int max = to;

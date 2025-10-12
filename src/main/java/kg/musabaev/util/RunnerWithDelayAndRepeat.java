@@ -2,6 +2,8 @@ package kg.musabaev.util;
 
 import java.util.Random;
 
+import static kg.musabaev.util.Utils.currentThreadName;
+
 public class RunnerWithDelayAndRepeat {
 
     private final int runNTimes;
@@ -34,7 +36,7 @@ public class RunnerWithDelayAndRepeat {
                 Thread.sleep(randomDelay);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException(Thread.currentThread().getName() + "interrupted", e);
+                throw new RuntimeException(currentThreadName() + "interrupted", e);
             }
             runnable.run();
         }

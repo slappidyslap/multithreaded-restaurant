@@ -5,6 +5,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Objects.requireNonNull;
+import static kg.musabaev.util.Utils.currentThreadName;
 import static kg.musabaev.util.Utils.requireOrderStatus;
 
 // как терминал в пиццериях у кассы
@@ -46,7 +47,7 @@ public class OrdersManager {
             return order;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException(Thread.currentThread().getName() + "interrupted", e);
+            throw new RuntimeException(currentThreadName() + "interrupted", e);
         }
     }
 

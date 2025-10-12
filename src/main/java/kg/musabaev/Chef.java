@@ -60,7 +60,7 @@ public class Chef {
                 Thread.sleep(randomDelay);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException(Thread.currentThread().getName() + "interrupted", e);
+                throw new RuntimeException(currentThreadName() + "interrupted", e);
             }
         }
     }

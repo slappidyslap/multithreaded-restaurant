@@ -223,7 +223,7 @@ public class Waiter extends Thread {
 
     // simulate delivering
     private void deliverOrder() {
-        Utils.simulateDelay(random, 2000, 4000);
+        Utils.delay(random, 2000, 4000);
     }
 
     public String getFirstName() {

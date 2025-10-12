@@ -19,7 +19,6 @@ public class Restaurant {
     private final OrdersManager ordersManager;
     private final RestaurantSystemDispatcher dispatcher;
     private final Semaphore tableSemaphore;
-
     private final List<Waiter> waiters;
     private final List<Chef> chefs;
     private final AtomicInteger clientCount;

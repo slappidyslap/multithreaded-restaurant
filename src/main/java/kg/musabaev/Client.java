@@ -62,7 +62,7 @@ public class Client {
 
     public void startEating() {
         logger.info(currentThreadName() + " starts eating " + occupiedTable.getClientOrderId() + "-order");
-        Utils.simulateDelay(random, 20_000, 40_000);
+        Utils.delay(random, 20_000, 40_000);
         occupiedTable.isClientFinishedEating().set(true);
         logger.info(currentThreadName() + " finished eating " + occupiedTable.getClientOrderId() + "-order");
     }
