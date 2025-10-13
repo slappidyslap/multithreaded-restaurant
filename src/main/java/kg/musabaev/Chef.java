@@ -10,12 +10,13 @@ public class Chef {
     private final String name;
     private final Restaurant restaurant;
     private final OrdersManager ordersManager;
-    private final Logger logger = Logger.getLogger(Chef.class.getName());
+    private final Logger logger;
 
     public Chef(String name, Restaurant restaurant) {
         this.name = name;
         this.restaurant = restaurant;
         this.ordersManager = restaurant.getOrdersManager();
+        this.logger = Logger.getLogger(Chef.class.getName());
     }
 
     public String getName() {

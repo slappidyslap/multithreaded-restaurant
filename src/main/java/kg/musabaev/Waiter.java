@@ -75,53 +75,6 @@ public class Waiter extends Thread {
         }
     }
 
-    private List<Table> checkClientsFinishedEating() {
-        logger.info(currentThreadName() + " is checking tables where clients finished eating");
-
-        if (servingTables.isEmpty()) {
-            logger.info(currentThreadName() + " hasn't any table to handle checkout");
-            return Collections.emptyList();
-        }
-        List<Table> tablesWhereClientsFinishedEating = new ArrayList<>();
-        for (Table table : servingTables) {
-            requireOrderStatus(table.getClientOrder(), OrderStatus.DELIVERED);
-
-            boolean isClientFinishedEating = table.isClientFinishedEating().get();
-            if (isClientFinishedEating) {
-                tablesWhereClientsFinishedEating.add(table);
-            }
-        }
-        logger.info(format("%s found %s tables where clients finished eating. tables ids: %s",
-                currentThreadName(),
-                tablesWhereClientsFinishedEating.size(),
-                tablesWhereClientsFinishedEating.stream().map(Table::getId).collect(Collectors.toList())));
-        return tablesWhereClientsFinishedEating;
-    }
-
-    private void handleCheckouts(List<Table> tables) {
-        logger.info(format("%s starts handling checkout for tables: %s",
-                currentThreadName(),
-                tables.stream().map(Table::getId).collect(Collectors.toList())
-                ));
-        for (Table table : tables) {
-            table.getClientOrder().setStatus(OrderStatus.COMPLETED);
-            logger.info(format("%s checkout money by %d-client occupied %d-table",
-                    currentThreadName(),
-                    table.getOccupiedClientId(),
-                    table.getId()));
-            cleanTable(table);
-        }
-        tables.forEach(t -> t.getClientOrder().setStatus(OrderStatus.COMPLETED));
-    }
-
-    private void cleanTable(Table table) {
-        table.setOccupiedClient(null);
-        this.servingTables.remove(table);
-        table.setServingWaiter(null);
-        this.orders.remove(table.getClientOrder());
-        table.setClientOrder(null);
-    }
-
     private Table findAndAssignTable() {
         logger.info(currentThreadName() + " is finding table to serve client");
         for (Table table : restaurant.getTables()) {
@@ -224,6 +177,53 @@ public class Waiter extends Thread {
     // simulate delivering
     private void deliverOrder() {
         Utils.delay(random, 2000, 4000);
+    }
+
+    private List<Table> checkClientsFinishedEating() {
+        logger.info(currentThreadName() + " is checking tables where clients finished eating");
+
+        if (servingTables.isEmpty()) {
+            logger.info(currentThreadName() + " hasn't any table to handle checkout");
+            return Collections.emptyList();
+        }
+        List<Table> tablesWhereClientsFinishedEating = new ArrayList<>();
+        for (Table table : servingTables) {
+            requireOrderStatus(table.getClientOrder(), OrderStatus.DELIVERED);
+
+            boolean isClientFinishedEating = table.isClientFinishedEating().get();
+            if (isClientFinishedEating) {
+                tablesWhereClientsFinishedEating.add(table);
+            }
+        }
+        logger.info(format("%s found %s tables where clients finished eating. tables ids: %s",
+                currentThreadName(),
+                tablesWhereClientsFinishedEating.size(),
+                tablesWhereClientsFinishedEating.stream().map(Table::getId).collect(Collectors.toList())));
+        return tablesWhereClientsFinishedEating;
+    }
+
+    private void handleCheckouts(List<Table> tables) {
+        logger.info(format("%s starts handling checkout for tables: %s",
+                currentThreadName(),
+                tables.stream().map(Table::getId).collect(Collectors.toList())
+                ));
+        for (Table table : tables) {
+            table.getClientOrder().setStatus(OrderStatus.COMPLETED);
+            logger.info(format("%s checkout money by %d-client occupied %d-table",
+                    currentThreadName(),
+                    table.getOccupiedClientId(),
+                    table.getId()));
+            cleanTable(table);
+        }
+        tables.forEach(t -> t.getClientOrder().setStatus(OrderStatus.COMPLETED));
+    }
+
+    private void cleanTable(Table table) {
+        table.setOccupiedClient(null);
+        this.servingTables.remove(table);
+        table.setServingWaiter(null);
+        this.orders.remove(table.getClientOrder());
+        table.setClientOrder(null);
     }
 
     public String getFirstName() {

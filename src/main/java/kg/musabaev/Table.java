@@ -42,7 +42,6 @@ public class Table {
         return false;
     }
 
-    // офик должен к этому момент "представиться" с клиентами и обслуживать
     public void signalOrderPlaced(Order order) {
         requireNonNull(this.occupiedClient, "table must be busy to place order");
         requireNonNull(order, "order can not be null");
@@ -53,27 +52,6 @@ public class Table {
         this.clientOrder = order;
         clientOrdered.signal();
         locker.unlock();
-    }
-
-    @Override
-    public String toString() {
-        return "Table{" +
-                "id=" + id +
-                ", occupiedClient=" + occupiedClient +
-                ", servingWaiter=" + servingWaiter +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        Table table = (Table) o;
-        return id == table.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(id);
     }
 
     public int getId() {
@@ -126,5 +104,27 @@ public class Table {
 
     public void setServingWaiter(Waiter servingWaiter) {
         this.servingWaiter = servingWaiter;
+    }
+
+
+    @Override
+    public String toString() {
+        return "Table{" +
+                "id=" + id +
+                ", occupiedClient=" + occupiedClient +
+                ", servingWaiter=" + servingWaiter +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Table table = (Table) o;
+        return id == table.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 }
